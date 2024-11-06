@@ -1,16 +1,18 @@
 from fastapi import HTTPException
 
+from dependency_injector.wiring import inject
+
 from ulid import ULID
 from datetime import datetime
 from user.domain.user import User
 from user.domain.repository.user_repo import IUserRepository
-from user.infra.repository.user_repo import UserRepository
 
 from utils.crypto import Crypto
 
 class UserService:
-    def __init__(self):
-        self.user_repo: IUserRepository = UserRepository()
+    @inject # 주입받은 객체를 사용한다고 선언
+    def __init__(self, user_repo: IUserRepository):
+        self.user_repo = user_repo
         self.ulid = ULID()
         self.crypto = Crypto()
 
