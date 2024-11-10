@@ -2,6 +2,7 @@ from dependency_injector.wiring import inject, Provide
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from typing import Annotated
+from common.auth import CurrentUser, get_current_user
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 
@@ -17,7 +18,7 @@ class CreateUserBody(BaseModel):
     email: EmailStr = Field(max_length=64)
     password: str = Field(min_length=8, max_length=32)
 
-class UpdateUser(BaseModel):
+class UpdateUserBody(BaseModel):
     name: str | None = Field(min_length=2, max_length=32, default=None)
     password: str | None = Field(min_length=8, max_length=32, default=None)
 
@@ -50,17 +51,17 @@ def create_user(
     return created_user
 
 
-@router.put("/{user_id}")
+@router.put("")
 @inject
 def update_user(
-    user_id: str,
-    user: UpdateUser,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
+    body: UpdateUserBody,
     user_service: UserService = Depends(Provide[Container.user_service]),
 ):
     user = user_service.update_user(
-        user_id=user_id,
-        name=user.name,
-        password=user.password
+        user_id=current_user.id,
+        name=body.name,
+        password=body.password
     )
 
     return user
@@ -84,12 +85,10 @@ def get_users(
 @router.delete("", status_code=204)
 @inject
 def delete_user(
-    user_id: str,
+    current_user: Annotated[CurrentUser, Depends(get_current_user)],
     user_service: UserService = Depends(Provide[Container.user_service]),
 ):
-    # TODO: 다른 유저를 삭제할 수 없도록 토큰에서 유저 아이디를 구한다.
-
-    user_service.delete_user(user_id)
+    user_service.delete_user(current_user.id)
 
 
 @router.post("/login")
