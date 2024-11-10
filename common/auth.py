@@ -1,3 +1,5 @@
+from config import get_settings
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from fastapi import Depends, HTTPException, status
@@ -6,7 +8,9 @@ from typing import Annotated
 from jose import JWTError, jwt
 from enum import StrEnum
 
-SECRET_KEY = "THIS_IS_SUPER_SECRET_KEY"
+settings = get_settings()
+
+SECRET_KEY = settings.jwt_secret
 ALGORITHM = "HS256"
 
 class Role(StrEnum):
